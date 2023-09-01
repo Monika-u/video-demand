@@ -1,0 +1,64 @@
+
+Low-Level Design 
+
+Video Storage: 
+using cloud storage like Amazon S3.Store video files and generate unique keys for each video.Store that respective path in db.
+
+Authentication :
+using JWT-based authentication,for verify user credentials against the MariaDB users table. we can also Store tokens in MariaDB for revocation and expiration (if needed).
+
+Transcoding & Encryption:
+i thimk its important for used friendly display ,we can Use FFmpeg for transcoding to various bitrates.Utilize AES encryption for video files.Store encryption keys securely as AWS.
+
+designed tables :
+   - Users Table: id, username, password hash, etc.
+   - Videos Table: id, title, duration, file path, etc.
+
+API Calls:
+   - `/auth/login`: POST method.
+   - `/videos/{id}`: GET methos.
+   - `/videos/{id}/stream`: GET/POST method.
+
+
+   * Building the basic flow of APIs using Golang and "gorilla/mux" for routing.
+   * Validate access tokens for authentication.
+   * Handle requests for video metadata and streaming.
+   * we can use redis for caching frequently accessed video metadata or store user tokens etc
+
+
+High-Level Design:
+
+The design components used :
+
+1.Authentication Module : Responsible for user authentication and token    issuance.
+2.Video Storage: Stores video files and metadata.
+3.Transcoding & Encryption: Transcodes videos and applies encryption.
+4.API Gateway: Handles client requests and forwards them to appropriate microservices.
+5.Database : using MariaDB to Stores user data, video metadata, and authentication tokens.
+
+The basic flow of the process:
+
+Users log in and obtain an access token through the Authentication Module, then request video content via the API Gateway. Videos are transcoded and encrypted, if necessary, by the Transcoding & Encryption component and retrieves video metadata from the Database.
+
+Scalability explained: we can Containerize microservices using Docker.
+
+
+   +-------------------+       +----------------+       +------------------+
+   |   User Database   |       | Video          |       |     Bitrate      |
+   |                   |       |   Database     |       |  Streaming Engine|
+   +-------------------+       +----------------+       +------------------+
+            |                          |                        |
+            v                          v                        v
+   +-------------------+       +----------------+       +------------------+
+   |   Authentication  |       | Video Storage  |       |                  |
+   |                   |<----->|                |<----->|                  |
+   |                   |       |                |       |                  |
+   +-------------------+       |                |       |   Bitrate        |
+                                +----------------+      |  Streaming       |
+                                                        +------------------+
+                                                                    |
+                                                                    v
+                                                       +-------------------------+
+                                                       |   application
+                                                       +-------------------------+
+
